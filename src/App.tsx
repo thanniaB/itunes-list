@@ -6,8 +6,28 @@ import AlbumListItem from "./components/AlbumListItem";
 import Slider from "./components/Slider";
 import AlbumDetails from "./components/AlbumDetails";
 
+type Details = {
+    label: string,
+}
+
+type Category = {
+    attributes: Details
+}
+
+type Album = {
+    id: Details,
+    category: Category,
+    rights: Details,
+    title: Details,
+    place?: number,
+    "im:name": Details,
+    "im:artist": Details,
+    "im:image": [Details, Details, Details],
+    "im:releaseDate": Details
+};
+
 function App() {
-    const emptyAlbum = {
+    const emptyAlbum: Album = {
         "im:name":{label:""},
         "im:artist":{label:""},
         title:{label:""},
@@ -26,25 +46,6 @@ function App() {
     const [filterMax, setFilterMax] = useState(99);
     const [selectedAlbum, setSelectedAlbum] = useState(emptyAlbum)
 
-    type Details = {
-        label: string,
-    }
-
-    type Category = {
-        attributes: Details
-    }
-
-    type Album = {
-        "im:name": Details,
-        "im:artist": Details,
-        title: Details,
-        place: number,
-        "im:image": [Details, Details, Details],
-        id: Details,
-        category: Category,
-        rights: Details,
-        "im:releaseDate": Details
-    };
 
     useEffect(() => {
         let ignore = false;
@@ -67,18 +68,20 @@ function App() {
         }
 
         fetchAlbums();
+        const resizeHandler = () => {
+          let intViewportWidth = window.innerWidth;
+          if (intViewportWidth < 1025) {
+            setIsBigScreen(false);
+          } else {
+            setIsBigScreen(true);
+          }
+        };
 
-        window.addEventListener('resize', () => {
-            let intViewportWidth = window.innerWidth;
-            if (intViewportWidth < 1025) {
-                setIsBigScreen(false);
-            } else {
-                setIsBigScreen(true);
-            }
-        });
+        window.addEventListener('resize', resizeHandler);
 
         return () => {
-            ignore = true
+            ignore = true;
+            window.removeEventListener("resize", resizeHandler);
         };
 
     }, []);
@@ -104,34 +107,24 @@ function App() {
         }
     }
 
-    const handleFilterMinChange = (event: SyntheticEvent) => {
-        const element = event.currentTarget as HTMLInputElement;
-        const value: number = +element.value;
-
-        if (value) {
-            setFilterMin(value);
-        }
+    const handleFilterMinChange = (value: number | undefined) => {
+        if (!value) { return; }
+        setFilterMin(value);
     }
 
-    const handleFilterMaxChange = (event: SyntheticEvent) => {
-        const element = event.currentTarget as HTMLInputElement;
-        let value: number = +element.value;
-
-        if (value) {
-            value = value > maxAlbums ? maxAlbums : value;
-            setFilterMax(value);
-        }
+    const handleFilterMaxChange = (value: number | undefined) => {
+        if (!value) { return; }
+        value = value > maxAlbums ? maxAlbums : value;
+        setFilterMax(value);
     }
 
     const resetList = () => {
         setDisplayedAlbums(allAlbums);
     }
 
-    const handleSelectAlbum = (event: SyntheticEvent) => {
-        const element = event.currentTarget as HTMLInputElement;
-        const albumPlace = element.querySelector('.place')!.innerHTML;
-        const index = parseInt(albumPlace) - 1;
-        setSelectedAlbum(allAlbums[index]);
+    const handleSelectAlbum = (place: number | undefined) => {
+        if(!place) { return; }
+        setSelectedAlbum(allAlbums[place - 1]);
     }
 
     if (isLoading) {
